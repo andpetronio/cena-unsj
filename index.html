@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro Cena 🎉</title>
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js';
+
+    // ⚠️ Cambiar estos valores
+    const SUPABASE_URL = "https://okaqmkrkulfbaxxigvew.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rYXFta3JrdWxmYmF4eGlndmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2NzMzODgsImV4cCI6MjA3NDI0OTM4OH0.eV2Y68pAfT2yiwbaV2AiVSktCmFrineoYLpSdEqbS1c";
+    const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwdOYdS9jte8GRG3UNKxeRnwiQ1l9dJAtYPdDawyiLJ5zhPdh5oU34ZxmtzGw0-g5s3VA/exec";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function registrar() {
+      const nombre = document.getElementById("nombre").value;
+      const dni = document.getElementById("dni").value;
+      const correo = document.getElementById("correo").value;
+      const lugar = document.getElementById("lugar").value;
+
+      if (!nombre || !dni || !correo) {
+        return alert("❌ Completá todos los campos obligatorios");
+      }
+
+      // Inserta en Supabase
+      let { data, error } = await supabase
+        .from("invitados")
+        .insert([{ nombre, dni, correo, lugar }])
+        .select()
+        .single();
+
+      if (error) return alert("❌ " + error.message);
+
+      alert("✅ Registrado. Te enviaremos tu QR a " + data.correo);
+
+      // Llama al Apps Script para enviar el correo
+      fetch(APP_SCRIPT_URL + "?dni=" + dni);
+    }
+
+    window.registrar = registrar;
+  </script>
+</head>
+<body>
+  <h1>Registro Cena de Fin de Año 🎉</h1>
+  <label>Nombre y Apellido *</label><br>
+  <input id="nombre" placeholder="Nombre"><br>
+  <label>DNI *</label><br>
+  <input id="dni" placeholder="DNI"><br>
+  <label>Correo electrónico *</label><br>
+  <input id="correo" placeholder="Correo"><br>
+  <label>Lugar de trabajo</label><br>
+  <input id="lugar" placeholder="Lugar"><br>
+  <button onclick="registrar()">Registrar</button>
+</body>
+</html>

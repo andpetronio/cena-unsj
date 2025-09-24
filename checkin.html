@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Check-in Cena 🎉</title>
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js';
+
+    const SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
+    const SUPABASE_ANON_KEY = "TU-ANON-KEY";
+    const CONTROL_PIN = "u1973*"; // ⚠️ Cambiar este PIN
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const params = new URLSearchParams(window.location.search);
+    const codigo = params.get("codigo");
+
+    let invitado = null;
+
+    async function cargarInvitado() {
+      if (!codigo) {
+        document.getElementById("info").innerText = "❌ QR inválido.";
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("invitados")
+        .select("*")
+        .eq("codigo_unico", codigo)
+        .single();
+
+      if (error || !data) {
+        document.getElementById("info").innerText = "❌ Invitado no encontrado.";
+        return;
+      }
+
+      invitado = data;
+      document.getElementById("info").innerHTML = `
+        <p><b>Nombre:</b> ${data.nombre}</p>
+        <p><b>DNI:</b> ${data.dni}</p>
+        <p><b>Lugar:</b> ${data.lugar}</p>
+        <p><b>Estado:</b> ${data.estado}</p>
+      `;
+    }
+
+    async function marcar(estado) {
+      await supabase
+        .from("invitados")
+        .update({ estado, hora_checkin: new Date() })
+        .eq("id", invitado.id);
+
+      document.body.innerHTML =
+        estado === "asistio" ? "✅ Asistencia registrada" : "❌ No identificado";
+    }
+
+    function validarPin() {
+      const pinIngresado = document.getElementById("pin").value;
+      if (pinIngresado === CONTROL_PIN) {
+        document.getElementById("acciones").style.display = "block";
+        document.getElementById("login").style.display = "none";
+      } else {
+        alert("❌ PIN incorrecto");
+      }
+    }
+
+    window.marcar = marcar;
+    window.validarPin = validarPin;
+    cargarInvitado();
+  </script>
+</head>
+<body>
+  <h2>Verificación de invitado</h2>
+  <div id="info">Cargando...</div>
+
+  <div id="login">
+    <p>Ingrese PIN de controlador:</p>
+    <input type="password" id="pin" placeholder="PIN" />
+    <button onclick="validarPin()">Ingresar</button>
+  </div>
+
+  <div id="acciones" style="display:none;">
+    <button onclick="marcar('asistio')">✅ Confirmar ingreso</button>
+    <button onclick="marcar('no_identificado')">❌ No identificado</button>
+  </div>
+</body>
+</html>

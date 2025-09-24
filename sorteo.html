@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Sorteo Cena 🎉</title>
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js';
+
+    const SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
+    const SUPABASE_ANON_KEY = "TU-ANON-KEY";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function sortear() {
+      const { data: ganadorId, error } = await supabase.rpc("sortear_invitado");
+      if (error) return alert("❌ " + error.message);
+      if (!ganadorId) return alert("🎉 Ya no quedan invitados para sortear.");
+
+      const { data } = await supabase.from("invitados").select("*").eq("id", ganadorId).single();
+      alert(`🎉 Ganador: ${data.nombre} (DNI ${data.dni}, ${data.lugar})`);
+    }
+
+    window.sortear = sortear;
+  </script>
+</head>
+<body>
+  <h1>Sorteo Cena de Fin de Año 🎉</h1>
+  <button onclick="sortear()">Sortear invitado</button>
+</body>
+</html>
