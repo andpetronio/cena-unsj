@@ -6,19 +6,16 @@
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js';
 
-    const SUPABASE_URL = "https://okaqmkrkulfbaxxigvew.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rYXFta3JrdWxmYmF4eGlndmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2NzMzODgsImV4cCI6MjA3NDI0OTM4OH0.eV2Y68pAfT2yiwbaV2AiVSktCmFrineoYLpSdEqbS1c";
-    const CONTROL_PIN = "u1973*"; // ⚠️ Cambiar este PIN
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = createClient("https://okaqmkrkulfbaxxigvew.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rYXFta3JrdWxmYmF4eGlndmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2NzMzODgsImV4cCI6MjA3NDI0OTM4OH0.eV2Y68pAfT2yiwbaV2AiVSktCmFrineoYLpSdEqbS1c");
     const params = new URLSearchParams(window.location.search);
     const codigo = params.get("codigo");
+    const CONTROL_PIN = "u1973*"; // PIN secreto del controlador
 
     let invitado = null;
 
     async function cargarInvitado() {
       if (!codigo) {
-        document.getElementById("info").innerText = "❌ QR inválido.";
+        document.getElementById("info").innerText = "❌ Falta código en el QR.";
         return;
       }
 
@@ -38,20 +35,26 @@
         <p><b>Nombre:</b> ${data.nombre}</p>
         <p><b>DNI:</b> ${data.dni}</p>
         <p><b>Lugar:</b> ${data.lugar}</p>
-        <p><b>Estado:</b> ${data.estado}</p>
+        <p><b>Estado actual:</b> ${data.estado}</p>
       `;
     }
 
     async function marcar(estado) {
-      await supabase
+      const { error } = await supabase
         .from("invitados")
         .update({ estado, hora_checkin: new Date() })
         .eq("id", invitado.id);
 
-      document.body.innerHTML =
-        estado === "asistio" ? "✅ Asistencia registrada" : "❌ No identificado";
+      if (error) {
+        alert("Error al actualizar: " + error.message);
+      } else {
+        document.body.innerHTML = estado === "asistio"
+          ? "✅ Asistencia registrada"
+          : "❌ No identificado";
+      }
     }
 
+    // Valida PIN antes de mostrar acciones
     function validarPin() {
       const pinIngresado = document.getElementById("pin").value;
       if (pinIngresado === CONTROL_PIN) {
@@ -72,7 +75,7 @@
   <div id="info">Cargando...</div>
 
   <div id="login">
-    <p>Ingrese PIN de controlador:</p>
+    <p>Ingrese PIN del controlador:</p>
     <input type="password" id="pin" placeholder="PIN" />
     <button onclick="validarPin()">Ingresar</button>
   </div>
